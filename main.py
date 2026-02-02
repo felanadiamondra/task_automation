@@ -77,27 +77,50 @@ try:
     print("Connection successful using SQL Server Authentication!")
 
     # Execute a query
-    cursor.execute("""
-        SELECT 
-            i.ITMREF_0,
-            i.ITMDES1_0,
-            i.ITMSTD_0,
-            m.AVC_0,
-            i.STU_0,
-            i.TCLCOD_0,
-            i.TSICOD_0
+    # cursor.execute("""
+    #     SELECT 
+    #         i.ITMREF_0,
+    #         i.ITMDES1_0,
+    #         i.ITMSTD_0,
+    #         m.AVC_0,
+    #         i.STU_0,
+    #         i.TCLCOD_0,
+    #         i.TSICOD_0
 
-        FROM NPAPR2.ITMMASTER i
-        OUTER APPLY (
-            SELECT TOP 1 AVC_0
-            FROM NPAPR2.ITMMVT m
-            WHERE m.ITMREF_0 = i.ITMREF_0
-            ORDER BY m.UPDDATTIM_0 ASC
-        ) m
-        WHERE i.CPY_0 = 'STD'
-        AND i.ITMSTA_0 = 1
-        ORDER BY i.ITMREF_0 ASC
-    """)    
+    #     FROM NPAPR2.ITMMASTER i
+    #     OUTER APPLY (
+    #         SELECT TOP 1 AVC_0
+    #         FROM NPAPR2.ITMMVT m
+    #         WHERE m.ITMREF_0 = i.ITMREF_0
+    #         ORDER BY m.UPDDATTIM_0 ASC
+    #     ) m
+    #     WHERE i.CPY_0 = 'STD'
+    #     AND i.ITMSTA_0 = 1
+    #     ORDER BY i.ITMREF_0 ASC
+    # """)    
+
+    cursor.execute(
+        """
+            SELECT
+            ITM.ITMREF_0,            
+            ITM.ITMDES1_0,            
+            ITM.ITMSTD_0,      
+            MVT.AVC_0,     
+            ITM.STU_0,           
+            ITM.TCLCOD_0,           
+            ITM.TSICOD_0               
+   
+            FROM NPAPR2.ITMMASTER ITM
+            LEFT JOIN NPAPR2.ITMMVT MVT
+                ON ITM.ITMREF_0 = MVT.ITMREF_0
+
+            WHERE ITM.ITMSTA_0 = 1
+            AND ITM.CPY_0 = 'STD'
+
+            ORDER BY ITM.ITMREF_0
+
+        """
+    )
     
     rows = cursor.fetchall()
 
@@ -174,6 +197,7 @@ try:
             designation = row.ITMDES1_0
             unite = row.STU_0
             famille = row.TSICOD_0
+            reference = row.ITMSTD_0
             groupe = row.TCLCOD_0
             prix = round(row.AVC_0 * Decimal(1.1), 5) if row.AVC_0 else 0
 
@@ -186,7 +210,7 @@ try:
                 "",               # Emplacement
                 0,               # NonStocke
                 unite,            # Unite
-                famille, "", groupe, "", "", "",  # Famille → ReferenceFabricant
+                famille, "", groupe, "", "", reference,  # Famille → ReferenceFabricant
                 delivery_day,     # DelaiLivraison
                 "", "", "", "", "",      # Reappro → QuantiteReappro
                 prix, "", "", "", "", "",  # PrixStandard → DateObsolescence
